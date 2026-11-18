@@ -1,0 +1,739 @@
+<title>Dash & Pick</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Press+Start+2P&display=swap">
+<style>
+/* Макет: тёмная «Ночь» и светлые «Луга» (темы игры), пиксельные рамки без скруглений, жёлтая монета как акцент.
+   Шапка, герой с живой сценой, факты, как играть, способности, скины, биомы, скачать. Политика на #privacy. */
+:root {
+  --bg: #e6f4fb;
+  --bg2: #d3ebf7;
+  --panel: #ffffff;
+  --fg: #17203d;
+  --muted: #475275;
+  --line: #17203d;
+  --accent: #ffcf3a;
+  --ink: #1c1530;
+  --link: #1b5fc4;
+  --crystal: #0f86bd;
+  --sky: #8ccef2;
+  --hill-far: #9dd1c9;
+  --hill-near: #73b880;
+  --grass: #4db34d;
+  --dirt: #734d2e;
+  --sun: #fff1a0;
+  --stars: 0;
+  --r-common: #7b8196;
+  --r-rare: #2f74e0;
+  --r-epic: #9347da;
+  --r-legend: #c97f00;
+  --font-display: 'Press Start 2P', 'Courier New', monospace;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0d24; --bg2: #10133a; --panel: #171a45; --fg: #eef0ff; --muted: #a7acd9; --line: #5a61c9;
+    --link: #8fc2ff; --crystal: #5fd8ff;
+    --sky: #141a40; --hill-far: #262d70; --hill-near: #1a3350; --grass: #26594d; --dirt: #261f33; --sun: #dfe6ff; --stars: 1;
+    --r-common: #b8bdd0; --r-rare: #6aa6ff; --r-epic: #c084ff; --r-legend: #ffb83d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0d24; --bg2: #10133a; --panel: #171a45; --fg: #eef0ff; --muted: #a7acd9; --line: #5a61c9;
+  --link: #8fc2ff; --crystal: #5fd8ff;
+  --sky: #141a40; --hill-far: #262d70; --hill-near: #1a3350; --grass: #26594d; --dirt: #261f33; --sun: #dfe6ff; --stars: 1;
+  --r-common: #b8bdd0; --r-rare: #6aa6ff; --r-epic: #c084ff; --r-legend: #ffb83d;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 17px;
+  line-height: 1.6;
+  padding-block: 0 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--link); }
+.wrap { max-width: 1080px; margin: 0 auto; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 400; line-height: 1.35; text-wrap: balance; margin: 0; }
+h2 { font-size: clamp(1rem, 2.6vw, 1.45rem); }
+h3 { font-size: 0.82rem; line-height: 1.5; }
+p { margin: 0; }
+.muted { color: var(--muted); }
+.label { font-family: var(--font-display); font-size: 0.62rem; letter-spacing: 0.04em; color: var(--muted); }
+
+/* шапка */
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; padding-block: 18px; }
+.logo { font-family: var(--font-display); font-size: 0.95rem; text-decoration: none; color: var(--fg); display: flex; align-items: center; gap: 10px; }
+.logo canvas { width: 28px; height: 28px; image-rendering: pixelated; }
+.nav { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.nav a { color: var(--fg); text-decoration: none; font-size: 0.92rem; font-weight: 600; padding: 4px 0; border-bottom: 2px solid transparent; }
+.nav a:hover { border-bottom-color: var(--accent); }
+
+/* кнопки */
+.btns { display: flex; flex-wrap: wrap; gap: 14px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-display); font-size: 0.72rem; line-height: 1.4;
+  padding: 15px 20px; text-decoration: none; cursor: pointer;
+  background: var(--accent); color: var(--ink);
+  border: 3px solid var(--ink); box-shadow: 4px 4px 0 var(--ink);
+}
+.btn:hover { transform: translate(2px, 2px); box-shadow: 2px 2px 0 var(--ink); }
+.btn:focus-visible, .chip:focus-visible, .card-pick:focus-visible, a:focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
+.btn.alt { background: var(--panel); color: var(--fg); border-color: var(--line); box-shadow: 4px 4px 0 var(--line); }
+.btn.alt:hover { box-shadow: 2px 2px 0 var(--line); }
+.btn[aria-disabled="true"] { opacity: 0.55; cursor: default; pointer-events: none; }
+
+/* герой */
+.hero { padding-block: 28px 12px; display: grid; gap: 22px; }
+.hero h1 { font-size: clamp(1.7rem, 6.2vw, 3.3rem); }
+.hero h1 span { color: var(--accent); }
+.hero .lead { max-width: 56ch; font-size: 1.1rem; color: var(--muted); }
+.scene { border: 4px solid var(--line); background: var(--sky); }
+.scene canvas { display: block; width: 100%; height: auto; image-rendering: pixelated; aspect-ratio: 8 / 3; }
+
+.facts { display: flex; flex-wrap: wrap; gap: 8px 26px; padding-block: 18px 6px; }
+.fact b { font-family: var(--font-display); font-weight: 400; font-size: 0.78rem; color: var(--fg); }
+.fact { font-size: 0.9rem; color: var(--muted); }
+
+section { padding-block: 56px 4px; }
+.sec-head { display: grid; gap: 10px; margin-bottom: 26px; max-width: 62ch; }
+
+/* как играть */
+.how { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; }
+.box { background: var(--panel); border: 3px solid var(--line); padding: 18px 20px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.box h3 { margin-bottom: 2px; }
+.keys { display: inline-block; font-family: var(--font-display); font-size: 0.62rem; border: 2px solid var(--line); padding: 3px 6px; margin-right: 4px; background: var(--bg2); }
+
+/* выбор способности */
+.demo { margin-top: 28px; background: var(--bg2); border: 3px dashed var(--line); padding: 22px; display: grid; gap: 16px; }
+.demo-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+.card-pick { text-align: left; font: inherit; color: inherit; cursor: pointer; background: var(--panel); border: 3px solid var(--line); padding: 16px; display: grid; gap: 6px; }
+.card-pick:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--line); }
+.card-pick[disabled] { cursor: default; transform: none; box-shadow: none; }
+.card-pick.chosen { border-color: var(--accent); box-shadow: 4px 4px 0 var(--accent); }
+.rar { display: inline-flex; align-items: center; gap: 7px; font-family: var(--font-display); font-size: 0.56rem; color: var(--muted); }
+.rar i { width: 10px; height: 10px; display: inline-block; background: var(--rc, var(--r-common)); }
+.demo-note { min-height: 1.6em; color: var(--muted); font-size: 0.95rem; }
+
+/* способности */
+.chips { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 22px; }
+.chip { font-family: var(--font-display); font-size: 0.6rem; padding: 10px 12px; background: var(--panel); color: var(--fg); border: 2px solid var(--line); cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+.chip i { width: 10px; height: 10px; background: var(--rc, var(--fg)); display: inline-block; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--ink); border-color: var(--ink); }
+.grid-ab { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
+.ab { background: var(--panel); border: 3px solid var(--line); padding: 14px 16px 16px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.ab .max { font-size: 0.8rem; color: var(--muted); }
+.ab p { font-size: 0.94rem; }
+
+/* скины */
+.grid-skins { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
+.skin { background: var(--panel); border: 3px solid var(--line); padding: 14px 10px 14px; display: grid; justify-items: center; gap: 6px; text-align: center; min-width: 0; }
+.skin canvas { width: 84px; height: 84px; image-rendering: pixelated; }
+.skin .nm { font-family: var(--font-display); font-size: 0.6rem; line-height: 1.5; }
+.skin .pr { font-size: 0.85rem; color: var(--muted); }
+.skin .fxtag { font-family: var(--font-display); font-size: 0.5rem; background: var(--accent); color: var(--ink); padding: 3px 5px; }
+.skin.free .pr { color: var(--fg); font-weight: 600; }
+.cry { color: var(--crystal); font-weight: 600; }
+
+/* биомы */
+.grid-bio { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+.bio { background: var(--panel); border: 3px solid var(--line); min-width: 0; }
+.bio canvas { display: block; width: 100%; height: auto; aspect-ratio: 8 / 3; image-rendering: pixelated; border-bottom: 3px solid var(--line); }
+.bio div { padding: 14px 16px 16px; display: grid; gap: 4px; }
+.bio p { font-size: 0.94rem; color: var(--muted); }
+
+/* скачать */
+.dl { background: var(--bg2); border: 3px solid var(--line); padding: 26px; display: grid; gap: 22px; }
+.steps { margin: 0; padding-left: 22px; display: grid; gap: 6px; }
+.note { font-size: 0.92rem; color: var(--muted); }
+
+/* подвал */
+footer { margin-top: 64px; padding-top: 24px; border-top: 3px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 28px; justify-content: space-between; font-size: 0.9rem; color: var(--muted); }
+
+/* политика */
+.doc { max-width: 72ch; padding-block: 28px; display: grid; gap: 18px; }
+.doc h2 { margin-top: 14px; }
+.doc ul { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .btn:hover, .card-pick:hover { transform: none; }
+}
+@media (max-width: 520px) {
+  .btn { width: 100%; }
+  .dl { padding: 18px; }
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <a class="logo" href="#top" id="top"><canvas id="logoCv" width="12" height="12" aria-hidden="true"></canvas>DASH &amp; PICK</a>
+    <nav class="nav" aria-label="Разделы">
+      <a href="#how">Как играть</a>
+      <a href="#abilities">Способности</a>
+      <a href="#skins">Скины</a>
+      <a href="#biomes">Биомы</a>
+      <a href="#download">Скачать</a>
+    </nav>
+  </header>
+
+  <!-- ГЛАВНАЯ -->
+  <main id="viewMain">
+    <div class="hero">
+      <div style="display:grid;gap:18px">
+        <h1>Беги.<br><span>Выбирай.</span><br>Выживай.</h1>
+        <p class="lead">Пиксельный раннер с рогалик-прокачкой. Каждые 150 очков игра замирает и предлагает две способности из двадцати. Возьмите одну и бегите дальше. Каждый забег выходит другим.</p>
+        <div class="btns">
+          <a class="btn" id="btnApk" href="#download">Скачать для Android</a>
+          <a class="btn alt" id="btnTg" href="https://t.me/galactocoffin" target="_blank" rel="noopener">Наш Telegram</a>
+        </div>
+      </div>
+      <div class="scene"><canvas id="heroCv" width="320" height="120" role="img" aria-label="Герой бежит и перепрыгивает шипы"></canvas></div>
+    </div>
+
+    <div class="facts" aria-label="Игра в цифрах">
+      <div class="fact"><b>20</b> способностей</div>
+      <div class="fact"><b>5</b> биомов и Шахта</div>
+      <div class="fact"><b>16</b> скинов</div>
+      <div class="fact"><b>0</b> рекламы</div>
+    </div>
+
+    <section id="how">
+      <div class="sec-head">
+        <h2>Как играть</h2>
+        <p class="muted">Управление на одну руку. Остальное решают ваши способности.</p>
+      </div>
+      <div class="how">
+        <div class="box">
+          <h3>Прыжок</h3>
+          <p>Тап по правой части экрана. На ПК: <span class="keys">Пробел</span><span class="keys">W</span>. Держите дольше, чтобы прыгнуть выше.</p>
+        </div>
+        <div class="box">
+          <h3>Скольжение</h3>
+          <p>Зажмите левую треть экрана. На ПК: <span class="keys">S</span>. Так проходят под летучими врагами.</p>
+        </div>
+        <div class="box">
+          <h3>Выбор способности</h3>
+          <p>Раз в 150+ очков бег останавливается. Берёте одну из двух карточек. Следующий выбор требует на 25 очков больше за каждые 500 набранных.</p>
+        </div>
+        <div class="box">
+          <h3>Монеты и кристаллы</h3>
+          <p>Монеты идут на скины и предметы на один забег. Кристаллы дают за недельные квесты, уровни игрока и код друга.</p>
+        </div>
+      </div>
+
+      <div class="demo" aria-live="polite">
+        <div>
+          <div class="label">ПОПРОБУЙТЕ ВЫБОР</div>
+          <p class="muted" style="margin-top:6px">Так выглядит экран способностей. Редкие и легендарные карточки выпадают реже.</p>
+        </div>
+        <div class="demo-cards" id="demoCards"></div>
+        <div class="demo-note" id="demoNote"></div>
+        <div class="btns"><button class="btn alt" id="demoAgain" type="button">Ещё раз</button></div>
+      </div>
+    </section>
+
+    <section id="abilities">
+      <div class="sec-head">
+        <h2>20 способностей</h2>
+        <p class="muted">Одни спасают жизнь, другие множат монеты, третьи меняют само прохождение. Лимит показывает, сколько раз способность можно взять за забег.</p>
+      </div>
+      <div class="chips" id="chips" role="group" aria-label="Фильтр по редкости"></div>
+      <div class="grid-ab" id="abGrid"></div>
+    </section>
+
+    <section id="skins">
+      <div class="sec-head">
+        <h2>16 скинов</h2>
+        <p class="muted">Скины дороже 200 монет светятся и оставляют шлейф. «Феникс» меняет героя полностью. «Галакто» бесплатный: достаточно подписаться на наш канал.</p>
+      </div>
+      <div class="grid-skins" id="skinGrid"></div>
+    </section>
+
+    <section id="biomes">
+      <div class="sec-head">
+        <h2>Пять биомов и Шахта</h2>
+        <p class="muted">Каждые 400 очков мир плавно меняет цвет, а вместе с ним и особые препятствия.</p>
+      </div>
+      <div class="grid-bio" id="bioGrid"></div>
+    </section>
+
+    <section id="more">
+      <div class="sec-head">
+        <h2>Аккаунт и квесты</h2>
+      </div>
+      <div class="how">
+        <div class="box">
+          <h3>Вход по почте</h3>
+          <p>Прогресс хранится в облаке: рекорд, монеты, скины, кристаллы, уровень. Сменили телефон или забыли пароль? Войдите заново, письмо для сброса придёт на почту.</p>
+        </div>
+        <div class="box">
+          <h3>Квесты</h3>
+          <p>Один часовой, два дневных и два недельных. Часовые и дневные дают монеты, недельные дают кристаллы.</p>
+        </div>
+        <div class="box">
+          <h3>Код друга</h3>
+          <p>У каждого игрока свой код. Когда друг вводит его в профиле, вы оба получаете по 5 кристаллов.</p>
+        </div>
+        <div class="box">
+          <h3>Уровень игрока</h3>
+          <p>Опыт даётся за каждый забег. Каждый новый уровень приносит кристаллы, и награда растёт на один с каждым уровнем.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="download">
+      <div class="sec-head">
+        <h2>Скачать</h2>
+      </div>
+      <div class="dl">
+        <div class="btns">
+          <a class="btn" id="dlApk" href="#" aria-disabled="true">Android APK</a>
+          <a class="btn alt" id="dlPlay" href="#" aria-disabled="true">Google Play</a>
+          <a class="btn alt" id="dlWeb" href="#" aria-disabled="true">Играть в браузере</a>
+        </div>
+        <p class="note" id="dlNote">Ссылки появятся в день релиза. Новости и первые сборки выходят в нашем Telegram-канале.</p>
+        <div>
+          <h3 style="margin-bottom:10px">Как установить APK</h3>
+          <ol class="steps">
+            <li>Скачайте файл на телефон и откройте его.</li>
+            <li>Если телефон спросит, разрешите установку из этого источника.</li>
+            <li>Нажмите «Установить» и запустите игру.</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ПОЛИТИКА -->
+  <main id="viewPrivacy" class="doc" hidden>
+    <a href="#top">← На главную</a>
+    <h1 style="font-size:clamp(1.2rem,4vw,1.9rem)">Политика конфиденциальности</h1>
+    <p class="muted">Игра Dash &amp; Pick. Обновлено: 17 ноября 2026.</p>
+
+    <h2>Какие данные мы собираем</h2>
+    <p>Игру можно пройти без аккаунта, тогда данные остаются только на вашем устройстве. Если вы создаёте аккаунт, мы храним:</p>
+    <ul>
+      <li>адрес электронной почты и идентификатор аккаунта;</li>
+      <li>пароль (его хранит сервис Firebase Authentication в защищённом виде, мы его не видим);</li>
+      <li>игровой прогресс: рекорд, монеты, кристаллы, купленные и выбранные скины, уровень, опыт, улучшения и статистику;</li>
+      <li>ваш код друга и отметку о введённом коде друга.</li>
+    </ul>
+    <p>Мы не собираем геолокацию, контакты, фотографии, рекламные идентификаторы и платёжные данные.</p>
+
+    <h2>Зачем нужны данные</h2>
+    <ul>
+      <li>вход в аккаунт и восстановление пароля по почте;</li>
+      <li>сохранение прогресса в облаке и перенос на другое устройство;</li>
+      <li>начисление наград за код друга.</li>
+    </ul>
+
+    <h2>Где хранятся данные</h2>
+    <p>Данные аккаунта и прогресса хранятся в сервисах Google Firebase (Authentication и Realtime Database). Доступ к данным игрока есть только у него самого и у разработчика игры. Мы не продаём и не передаём ваши данные третьим лицам, в игре нет рекламы.</p>
+
+    <h2>Как удалить данные</h2>
+    <p>Напишите нам в Telegram-канале <a href="https://t.me/galactocoffin" target="_blank" rel="noopener">t.me/galactocoffin</a> с адреса почты, указанного в аккаунте. Мы удалим аккаунт и связанные с ним данные. Локальные данные на телефоне удаляются вместе с игрой.</p>
+
+    <h2>Дети</h2>
+    <p>Игра не предназначена для детей младше 13 лет, и мы сознательно не собираем их данные.</p>
+
+    <h2>Изменения</h2>
+    <p>Если политика изменится, новая версия появится на этой странице с новой датой.</p>
+  </main>
+
+  <footer>
+    <span>Dash &amp; Pick</span>
+    <span><a href="https://t.me/galactocoffin" target="_blank" rel="noopener">Telegram</a> &nbsp;•&nbsp; <a href="#privacy">Политика конфиденциальности</a></span>
+  </footer>
+</div>
+
+<script>
+/* Ссылки: вставьте свои, когда они появятся. Пустая строка = «скоро». */
+var LINKS = { apk: "https://github.com/Artem8087/dash-and-pick/releases/download/dashPick1.1/DashPick.apk", play: "", web: "" };
+
+/* ---------- Данные из игры ---------- */
+var RAR = ["Обычная", "Редкая", "Эпическая", "Легендарная"];
+var RAR_VAR = ["--r-common", "--r-rare", "--r-epic", "--r-legend"];
+var RAR_W = [100, 40, 12, 4];
+var ABIL = [
+  ["Двойной прыжок", 1, 1, "Ещё один прыжок в воздухе"],
+  ["Щит", 0, 5, "Защищает от одного столкновения"],
+  ["Мощный прыжок", 0, 3, "Прыжок выше на 12%"],
+  ["Замедление", 0, 4, "Мир движется на 10% медленнее"],
+  ["Лёгкость", 0, 3, "Меньше гравитация (-10%), прыжок дольше"],
+  ["Очки x1.25", 0, 3, "+25% очков за бег"],
+  ["Малыш", 0, 3, "Персонаж меньше на 12%"],
+  ["Магнит", 2, 1, "Монеты притягиваются к вам"],
+  ["Золотая жила", 1, 2, "Каждая монета стоит на 1 больше"],
+  ["Заряд щита", 1, 2, "Щит каждые 250 очков. Пропадает, когда накоплено 3 щита"],
+  ["Звезда", 2, 4, "4 секунды неуязвимости прямо сейчас"],
+  ["Феникс", 3, 1, "Воскрешает после смерти один раз"],
+  ["Вампир", 1, 2, "20 монет заряжают щит. Пропадает, когда накоплено 3 щита"],
+  ["Монетный дождь", 0, 3, "Больше монет на трассе"],
+  ["Ракета", 2, 3, "3 секунды рывка: ускорение, неуязвимость, очки x1.35"],
+  ["Удача", 1, 4, "Редкие способности выпадают на 35% чаще"],
+  ["Спасение", 1, 1, "1 секунда неуязвимости после каждого выбора способности"],
+  ["Гигантизм", 2, 3, "Персонаж больше на 10%. 5% шанс раздавить препятствие"],
+  ["Некромант", 2, 3, "Призывает 2 скелетов: каждый ломает следующее препятствие"],
+  ["Кристаллизм", 1, 3, "10 секунд: монеты с шансом 10% становятся кристаллами"]
+];
+
+/* ---------- Пиксель-арт (те же рисунки, что в игре) ---------- */
+var HEAD = ["..DDDDDDDD..",".DBBBBBBBBD.","DBBBBBBBBBBD","DBBWWBBWWBBD","DBBWKBBWKBBD","DBBBBBBBBBBD","DBBBBBBBBBBD","DBBBDDDDBBBD","DBBBBBBBBBBD",".DBBBBBBBBD."];
+var HEAD_MAGMA = ["..DDDDDDDD..",".DBBBOBBBBD.","DBBBBBOBBBBD","DBBWWBBWWBBD","DBBWKBBWKBBD","DBOBBBBBBOBD","DBBOBBBBOBBD","DBBBDDDDBBBD","DBBBBBOBBBBD",".DBBBBBBBBD."];
+var HEAD_BW = ["..DDDDDDDD..",".DBBBBKKKKD.","DBBBBBKKKKKD","DBBWWBKWWKKD","DBBWKBKWKKKD","DBBBBBKKKKKD","DBBBBBKKKKKD","DBBBDDDDKKKD","DBBBBBKKKKKD",".DBBBBBKKKD."];
+var PHOENIX = ["..Y..Y..Y...",".YOYYOYYOY..","..EEEEEEE...",".ERRRRRRRE..","ERRWKRRWKRYY","ERRRRRRRRRY.","EOORRRRRROOE","EOOOORRROOOE",".EOOOOOOOOE.","..EYOYYOYE.."];
+var LEGS_STAND = [".DDBBDDBBDD.", "..DD....DD.."];
+var LEGS_A = ["..DBD...DBD.", "..DD.....DD."];
+var LEGS_B = ["...DBD.DBD..", "...DD...DD.."];
+var PH_FEET = [".YO.YOO.OY..", "..Y..YY..Y.."];
+
+var PAL = { W:"#ffffff", K:"#000000", R:"#e6331a", O:"#f27f1a", Y:"#ffd933", E:"#4d1f0d",
+  G:"#40b34d", g:"#1f732e", S:"#9e9ead", s:"#616173", I:"#a6ebff", i:"#4da6e6",
+  M:"#805447", m:"#4d2e26", Z:"#ededdb", z:"#99998c" };
+
+var CACTUS = ["....GG....","...GGGG...","...GGGg...","G..GGGg...","G..GGGg.GG","GG.GGGg.GG","GGGGGGg.Gg",".gGGGGGGGg","...GGGGGg.","...GGGGg..","...GGGGg..","...GGGGg.."];
+var ROCK = ["...ssSSss...",".sSSSSSSSs..","sSSSsSSSSSs.","sSSSSSSSsSSs","SSsSSSSSSSSs","SSSSSSsSSSSs","SSSSSSSSSSss","sSSsSSSSSSSs","sSSSSSSsSSs.",".sSSSSSSSs..","..ssSSSsss..","....ssss...."];
+var GHOST = ["...WWWWWW...","..WWWWWWWW..",".WWWWWWWWWW.",".WWKKWWKKWW.",".WWKKWWKKWW.",".WWWWWWWWWW.",".WWWWKKWWWW.",".WWWWKKWWWW.",".WWWWWWWWWW.",".WWWWWWWWWW.",".WW.WWWW.WW.","..W..WW..W.."];
+var ICICLE = ["IIIIIIII","IIIIIIiI",".IIIIIi.",".IIIIIi.","..IIIi..","..IIIi..","...IIi..","...IIi..","....Ii..","....I..."];
+var METEOR = ["........YY..",".......YOY..","...MMM.YOY..","..MMMMMOY...",".MMmMMMMM...",".MMMMMmMM...",".MMMmMMMM...","..MMMMMMM...","...MMMMM....","....MMM....."];
+
+function rgb(a) { return "rgb(" + Math.round(a[0]*255) + "," + Math.round(a[1]*255) + "," + Math.round(a[2]*255) + ")"; }
+
+function drawArt(ctx, art, x, y, body, outline, s) {
+  s = s || 1;
+  for (var r = 0; r < art.length; r++) {
+    for (var c = 0; c < art[r].length; c++) {
+      var ch = art[r][c];
+      if (ch === ".") continue;
+      var col = ch === "B" ? body : ch === "D" ? outline : PAL[ch];
+      if (!col) continue;
+      ctx.fillStyle = col;
+      ctx.fillRect(Math.round(x + c * s), Math.round(y + r * s), Math.ceil(s), Math.ceil(s));
+    }
+  }
+}
+
+/* Скины: имя, цвет, контур, цена, эффект, рисунок */
+var SKINS = [
+  ["Синий", [.25,.5,1], [.08,.12,.35], "Бесплатно", 0],
+  ["Красный", [.95,.3,.3], [.4,.05,.08], "60 монет", 0],
+  ["Зелёный", [.35,.8,.35], [.08,.3,.1], "100 монет", 0],
+  ["Фиолетовый", [.65,.4,.95], [.25,.1,.4], "150 монет", 0],
+  ["Розовый", [1,.5,.8], [.45,.1,.3], "120 монет", 0],
+  ["Золотой", [1,.8,.2], [.5,.3,0], "250 монет", 1],
+  ["Облачный", [.75,.88,1], [.3,.5,.8], "250 монет", 1],
+  ["Лава", [1,.45,.1], [.45,.1,0], "300 монет", 1],
+  ["Лёд", [.6,.9,1], [.1,.35,.5], "350 монет", 1],
+  ["Ниндзя", [.22,.22,.28], [0,0,.05], "400 монет", 1],
+  ["Призрак", [.9,.92,1], [.35,.35,.5], "500 монет", 1],
+  ["Аметистовый", [.7,.3,.9], [.3,.1,.45], "600 монет", 1],
+  ["Феникс", [.9,.2,.1], [.3,.12,.05], "2000 монет", 1, "ph"],
+  ["Галакто", [.35,.2,.65], [1,.8,.25], "Бесплатно за подписку", 0],
+  ["Магмовый", [.2,.1,.1], [.6,.12,.02], "20 кристаллов", 1, "magma"],
+  ["Чёрно-белый", [1,1,1], [.5,.5,.55], "50 кристаллов", 1, "bw"]
+];
+
+function heroSprite(ctx, x, y, s, frame, skin) {
+  var sk = skin || SKINS[0];
+  var body = rgb(sk[1]), out = rgb(sk[2]);
+  var legs = frame === 0 ? LEGS_A : frame === 1 ? LEGS_B : LEGS_STAND;
+  drawArt(ctx, HEAD, x, y, body, out, s);
+  drawArt(ctx, legs, x, y + 10 * s, body, out, s);
+}
+
+/* логотип */
+(function () {
+  var cv = document.getElementById("logoCv");
+  var ctx = cv.getContext("2d");
+  heroSprite(ctx, 0, 0, 1, 2);
+})();
+
+/* ---------- Живая сцена в шапке ---------- */
+(function () {
+  var cv = document.getElementById("heroCv");
+  var ctx = cv.getContext("2d");
+  var W = cv.width, H = cv.height, GY = 100;
+  var reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var stars = [];
+  for (var i = 0; i < 34; i++) stars.push([(i * 97) % W, (i * 53) % 70, (i % 3) + 1]);
+
+  function v(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+
+  var px = 52, py = 0, vy = 0, onGround = true;
+  var scroll = 0, t = 0, last = 0;
+  var spikes = [W + 40, W + 190];
+  var coins = [];
+  for (var k = 0; k < 6; k++) coins.push({ x: 130 + k * 14 + 60, y: 66 - Math.sin(k / 5 * Math.PI) * 16 });
+
+  function hills(color, base, amp, freq, speed) {
+    ctx.fillStyle = color;
+    for (var x = 0; x < W; x += 2) {
+      var h = base + amp * Math.sin((x + scroll * speed) * freq) + amp * 0.4 * Math.sin((x + scroll * speed) * freq * 2.7);
+      ctx.fillRect(x, GY - h, 2, h);
+    }
+  }
+
+  function frame(ts) {
+    var dt = Math.min(0.05, (ts - last) / 1000 || 0.016);
+    last = ts;
+    t += dt;
+    if (!reduce) scroll += dt * 70;
+
+    // небо
+    ctx.fillStyle = v("--sky"); ctx.fillRect(0, 0, W, H);
+    if (parseFloat(v("--stars")) === 1) {
+      ctx.fillStyle = "#fff";
+      for (var s = 0; s < stars.length; s++) { var st = stars[s]; if ((Math.floor(t * 2) + s) % 7) ctx.fillRect(st[0], st[1], st[2] > 2 ? 2 : 1, st[2] > 2 ? 2 : 1); }
+    }
+    ctx.fillStyle = v("--sun");
+    ctx.fillRect(262, 18, 20, 20); ctx.fillRect(258, 22, 28, 12); ctx.fillRect(266, 14, 12, 28);
+
+    hills(v("--hill-far"), 34, 10, 0.022, 0.12);
+    hills(v("--hill-near"), 20, 8, 0.035, 0.3);
+
+    // земля
+    ctx.fillStyle = v("--dirt"); ctx.fillRect(0, GY, W, H - GY);
+    ctx.fillStyle = v("--grass"); ctx.fillRect(0, GY, W, 6);
+    ctx.fillStyle = v("--grass");
+    for (var g = 0; g < 18; g++) { var gx = ((g * 23 - scroll) % (W + 20) + W + 20) % (W + 20) - 10; ctx.fillRect(gx, GY - 3, 2, 3); }
+
+    // шипы
+    for (var i2 = 0; i2 < spikes.length; i2++) {
+      if (!reduce) spikes[i2] -= dt * 70;
+      if (spikes[i2] < -20) spikes[i2] = Math.max.apply(null, spikes) + 150 + ((i2 * 37) % 50);
+      var sx = spikes[i2];
+      for (var r = 0; r < 12; r++) {
+        var half = Math.round((r + 1) / 12 * 7);
+        ctx.fillStyle = "#e63333";
+        ctx.fillRect(sx + 7 - half, GY - 12 + r, half * 2, 1);
+        ctx.fillStyle = "#7a0d0d";
+        ctx.fillRect(sx + 7 - half, GY - 12 + r, 1, 1); ctx.fillRect(sx + 6 + half, GY - 12 + r, 1, 1);
+      }
+    }
+
+    // монеты
+    for (var c = 0; c < coins.length; c++) {
+      var co = coins[c];
+      if (!reduce) co.x -= dt * 70;
+      if (co.x < -10) co.x += W + 140;
+      var sq = Math.abs(Math.cos(t * 6 + c));
+      var cw = Math.max(2, Math.round(7 * sq));
+      ctx.fillStyle = "#ffd426"; ctx.fillRect(Math.round(co.x + (7 - cw) / 2), co.y, cw, 7);
+      ctx.fillStyle = "#c98a0d"; ctx.fillRect(Math.round(co.x + (7 - cw) / 2), co.y + 6, cw, 1);
+    }
+
+    // герой: сам прыгает перед шипами
+    if (!reduce) {
+      if (onGround) {
+        for (var q = 0; q < spikes.length; q++) {
+          if (spikes[q] > px + 24 && spikes[q] <= px + 34) { vy = 215; onGround = false; break; }
+        }
+      } else {
+        vy -= 520 * dt; py += vy * dt;
+        if (py <= 0) { py = 0; vy = 0; onGround = true; }
+      }
+    }
+    var fr = !onGround ? 2 : (Math.floor(t * 9) % 2);
+    heroSprite(ctx, px, GY - 24 - py, 2, fr);
+
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+  // перерисовать один раз при смене темы, если анимация выключена
+  if (reduce && window.matchMedia) {
+    var mq = matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) mq.addEventListener("change", function () { requestAnimationFrame(frame); });
+    new MutationObserver(function () { requestAnimationFrame(frame); }).observe(document.documentElement, { attributes: true });
+  }
+})();
+
+/* ---------- Скины ---------- */
+(function () {
+  var grid = document.getElementById("skinGrid");
+  SKINS.forEach(function (sk) {
+    var card = document.createElement("div");
+    card.className = "skin" + (sk[3].indexOf("Бесплатно") === 0 ? " free" : "");
+    var cv = document.createElement("canvas");
+    cv.width = 12; cv.height = 12;
+    var ctx = cv.getContext("2d");
+    var body = rgb(sk[1]), out = rgb(sk[2]);
+    var head = sk[5] === "magma" ? HEAD_MAGMA : sk[5] === "bw" ? HEAD_BW : HEAD;
+    if (sk[5] === "ph") {
+      drawArt(ctx, PHOENIX, 0, 0, body, out, 1);
+      drawArt(ctx, PH_FEET, 0, 10, body, out, 1);
+    } else {
+      drawArt(ctx, head, 0, 0, body, out, 1);
+      drawArt(ctx, LEGS_STAND, 0, 10, body, out, 1);
+    }
+    cv.setAttribute("role", "img");
+    cv.setAttribute("aria-label", "Скин " + sk[0]);
+    var nm = document.createElement("div"); nm.className = "nm"; nm.textContent = sk[0];
+    var pr = document.createElement("div"); pr.className = "pr";
+    if (sk[3].indexOf("кристал") > -1) { pr.innerHTML = '<span class="cry"></span>'; pr.firstChild.textContent = sk[3]; }
+    else pr.textContent = sk[3];
+    card.appendChild(cv); card.appendChild(nm); card.appendChild(pr);
+    if (sk[4]) { var tag = document.createElement("div"); tag.className = "fxtag"; tag.textContent = "ЭФФЕКТ"; card.appendChild(tag); }
+    grid.appendChild(card);
+  });
+})();
+
+/* ---------- Биомы ---------- */
+(function () {
+  var BIOMES = [
+    { n: "Луга", sky: "#8cccf2", far: "#9dd1c9", near: "#73b880", grass: "#4db34d", dirt: "#734d2e", art: ROCK, s: 2, d: "Катящийся камень. Быстрее остального мира, его надо перепрыгнуть вовремя." },
+    { n: "Пустыня", sky: "#fad18c", far: "#edb873", near: "#d9994d", grass: "#e6bf66", dirt: "#b38047", art: CACTUS, s: 2, d: "Высокий кактус и перекати-поле. Кактус требует настоящего прыжка." },
+    { n: "Ночь", sky: "#141a40", far: "#262d70", near: "#1a3350", grass: "#26594d", dirt: "#261f33", art: GHOST, s: 2, stars: true, d: "Призрак мигает: проходить можно, пока он полупрозрачный. Летучие мыши быстрее птиц." },
+    { n: "Ледник", sky: "#bfe6ff", far: "#cceaff", near: "#a6d9f2", grass: "#e6f7ff", dirt: "#8cb3d9", art: ICICLE, s: 3, d: "Сосулька висит наверху, а потом падает прямо на трассу." },
+    { n: "Космос", sky: "#080519", far: "#401a66", near: "#591f80", grass: "#8033cc", dirt: "#1f0f33", art: METEOR, s: 2, stars: true, d: "Метеорит летит по диагонали и целится туда, где вы окажетесь." },
+    { n: "Шахта", sky: "#1a141a", far: "#33262a", near: "#261f1f", grass: "#614d3d", dirt: "#33261f", mine: true, d: "Мини-биом. Прыгните в светящуюся фиолетовую яму: 14 секунд без очков, но с наградой в 35 монет и шансом на 4 кристалла." }
+  ];
+  var grid = document.getElementById("bioGrid");
+  BIOMES.forEach(function (b) {
+    var card = document.createElement("div"); card.className = "bio";
+    var cv = document.createElement("canvas"); cv.width = 160; cv.height = 60;
+    var ctx = cv.getContext("2d");
+    ctx.fillStyle = b.sky; ctx.fillRect(0, 0, 160, 60);
+    if (b.stars) { ctx.fillStyle = "#fff"; for (var i = 0; i < 16; i++) ctx.fillRect((i * 37) % 160, (i * 19) % 30, 1, 1); }
+    function hl(col, base, amp, fq, ph) { ctx.fillStyle = col; for (var x = 0; x < 160; x++) { var h = base + amp * Math.sin(x * fq + ph); ctx.fillRect(x, 50 - h, 1, h); } }
+    hl(b.far, 16, 6, 0.05, 1); hl(b.near, 9, 4, 0.08, 3);
+    ctx.fillStyle = b.dirt; ctx.fillRect(0, 50, 160, 10);
+    ctx.fillStyle = b.grass; ctx.fillRect(0, 50, 160, 3);
+    if (b.mine) {
+      var g = ctx.createRadialGradient(80, 52, 2, 80, 52, 40);
+      g.addColorStop(0, "rgba(204,102,255,0.85)"); g.addColorStop(1, "rgba(204,102,255,0)");
+      ctx.fillStyle = g; ctx.fillRect(30, 16, 100, 44);
+      ctx.fillStyle = "#802eda"; ctx.fillRect(58, 50, 44, 8);
+      ctx.fillStyle = "#ffd426"; [64, 72, 80, 88, 96].forEach(function (x, j) { ctx.fillRect(x, 36 - (j % 3 === 1 ? 5 : j === 2 ? 8 : 0), 4, 4); });
+    } else {
+      var w = b.art[0].length, h2 = b.art.length;
+      drawArt(ctx, b.art, 104, 50 - h2 * b.s, "#fff", "#fff", b.s);
+      // герой
+      heroSprite(ctx, 30, 50 - 12, 1, 2);
+    }
+    cv.setAttribute("role", "img"); cv.setAttribute("aria-label", "Биом " + b.n);
+    card.appendChild(cv);
+    var inner = document.createElement("div");
+    var h3 = document.createElement("h3"); h3.textContent = b.n;
+    var p = document.createElement("p"); p.textContent = b.d;
+    inner.appendChild(h3); inner.appendChild(p); card.appendChild(inner);
+    grid.appendChild(card);
+  });
+})();
+
+/* ---------- Способности: список и фильтр ---------- */
+(function () {
+  var grid = document.getElementById("abGrid");
+  var chipsEl = document.getElementById("chips");
+  var filter = -1;
+
+  function chip(label, idx) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip";
+    b.setAttribute("aria-pressed", idx === filter ? "true" : "false");
+    if (idx >= 0) { var i = document.createElement("i"); i.style.setProperty("--rc", "var(" + RAR_VAR[idx] + ")"); b.appendChild(i); }
+    b.appendChild(document.createTextNode(label));
+    b.addEventListener("click", function () { filter = idx; render(); });
+    return b;
+  }
+
+  function render() {
+    chipsEl.innerHTML = "";
+    chipsEl.appendChild(chip("Все (" + ABIL.length + ")", -1));
+    for (var r = 0; r < 4; r++) {
+      var n = ABIL.filter(function (a) { return a[1] === r; }).length;
+      chipsEl.appendChild(chip(RAR[r] + " (" + n + ")", r));
+    }
+    grid.innerHTML = "";
+    ABIL.forEach(function (a) {
+      if (filter >= 0 && a[1] !== filter) return;
+      var card = document.createElement("div"); card.className = "ab";
+      var rar = document.createElement("span"); rar.className = "rar";
+      rar.style.setProperty("--rc", "var(" + RAR_VAR[a[1]] + ")");
+      rar.innerHTML = "<i></i>"; rar.appendChild(document.createTextNode(RAR[a[1]].toUpperCase()));
+      var h = document.createElement("h3"); h.textContent = a[0];
+      var p = document.createElement("p"); p.textContent = a[3];
+      var m = document.createElement("div"); m.className = "max"; m.textContent = "Лимит за забег: " + a[2];
+      card.appendChild(rar); card.appendChild(h); card.appendChild(p); card.appendChild(m);
+      grid.appendChild(card);
+    });
+  }
+  render();
+})();
+
+/* ---------- Демо выбора ---------- */
+(function () {
+  var wrap = document.getElementById("demoCards");
+  var note = document.getElementById("demoNote");
+  var again = document.getElementById("demoAgain");
+
+  function pickOne(pool) {
+    var total = 0;
+    pool.forEach(function (i) { total += RAR_W[ABIL[i][1]]; });
+    var r = Math.random() * total;
+    for (var k = 0; k < pool.length; k++) { r -= RAR_W[ABIL[pool[k]][1]]; if (r <= 0) return pool[k]; }
+    return pool[pool.length - 1];
+  }
+
+  function deal() {
+    var pool = ABIL.map(function (_, i) { return i; });
+    var a = pickOne(pool);
+    pool.splice(pool.indexOf(a), 1);
+    var b = pickOne(pool);
+    wrap.innerHTML = ""; note.textContent = "Выберите одну способность.";
+    [a, b].forEach(function (idx) {
+      var ab = ABIL[idx];
+      var btn = document.createElement("button"); btn.type = "button"; btn.className = "card-pick";
+      var rar = document.createElement("span"); rar.className = "rar";
+      rar.style.setProperty("--rc", "var(" + RAR_VAR[ab[1]] + ")");
+      rar.innerHTML = "<i></i>"; rar.appendChild(document.createTextNode(RAR[ab[1]].toUpperCase()));
+      var h = document.createElement("h3"); h.textContent = ab[0];
+      var p = document.createElement("p"); p.className = "muted"; p.textContent = ab[3];
+      btn.appendChild(rar); btn.appendChild(h); btn.appendChild(p);
+      btn.addEventListener("click", function () {
+        Array.prototype.forEach.call(wrap.children, function (c) { c.disabled = true; });
+        btn.classList.add("chosen");
+        note.textContent = "Вы взяли «" + ab[0] + "». Бег продолжается.";
+      });
+      wrap.appendChild(btn);
+    });
+  }
+  again.addEventListener("click", deal);
+  deal();
+})();
+
+/* ---------- Ссылки скачивания ---------- */
+(function () {
+  var map = [["dlApk", LINKS.apk], ["dlPlay", LINKS.play], ["dlWeb", LINKS.web]];
+  var any = false;
+  map.forEach(function (m) {
+    var el = document.getElementById(m[0]);
+    if (m[1]) { el.href = m[1]; el.removeAttribute("aria-disabled"); any = true; if (m[0] !== "dlWeb") el.target = "_blank"; el.rel = "noopener"; }
+    else { el.textContent += " (скоро)"; }
+  });
+  if (any) document.getElementById("dlNote").textContent = "Новости и первые сборки выходят в нашем Telegram-канале.";
+  var top = document.getElementById("btnApk");
+  if (LINKS.apk) { top.href = LINKS.apk; }
+})();
+
+/* ---------- Переключение: главная / политика ---------- */
+(function () {
+  var main = document.getElementById("viewMain");
+  var priv = document.getElementById("viewPrivacy");
+  function route() {
+    var isP = location.hash === "#privacy";
+    main.hidden = isP; priv.hidden = !isP;
+    if (isP) window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", route);
+  route();
+})();
+</script>
