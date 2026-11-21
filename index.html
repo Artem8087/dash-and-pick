@@ -200,9 +200,9 @@ footer { margin-top: 64px; padding-top: 24px; border-top: 3px solid var(--line);
     </div>
 
     <div class="facts" aria-label="Игра в цифрах">
-      <div class="fact"><b>20</b> способностей</div>
-      <div class="fact"><b>5</b> биомов и Шахта</div>
-      <div class="fact"><b>16</b> скинов</div>
+      <div class="fact"><b>22</b> способности</div>
+      <div class="fact"><b>6</b> биомов и Шахта</div>
+      <div class="fact"><b>19</b> скинов</div>
       <div class="fact"><b>0</b> рекламы</div>
     </div>
 
@@ -243,7 +243,7 @@ footer { margin-top: 64px; padding-top: 24px; border-top: 3px solid var(--line);
 
     <section id="abilities">
       <div class="sec-head">
-        <h2>20 способностей</h2>
+        <h2>22 способности</h2>
         <p class="muted">Одни спасают жизнь, другие множат монеты, третьи меняют само прохождение. Лимит показывает, сколько раз способность можно взять за забег.</p>
       </div>
       <div class="chips" id="chips" role="group" aria-label="Фильтр по редкости"></div>
@@ -252,16 +252,16 @@ footer { margin-top: 64px; padding-top: 24px; border-top: 3px solid var(--line);
 
     <section id="skins">
       <div class="sec-head">
-        <h2>16 скинов</h2>
-        <p class="muted">Скины дороже 200 монет светятся и оставляют шлейф. «Феникс» меняет героя полностью. «Галакто» бесплатный: достаточно подписаться на наш канал.</p>
+        <h2>19 скинов</h2>
+        <p class="muted">Скины дороже 200 монет светятся, оставляют шлейф и имеют свои эффекты прыжка, скольжения и смерти. У скинов от 500 монет ещё и особое меню выбора способностей. «Яйцо» выпадает только из сундуков. «Феникс» меняет героя полностью. «Галакто» бесплатный: достаточно подписаться на наш канал.</p>
       </div>
       <div class="grid-skins" id="skinGrid"></div>
     </section>
 
     <section id="biomes">
       <div class="sec-head">
-        <h2>Пять биомов и Шахта</h2>
-        <p class="muted">Каждые 400 очков мир плавно меняет цвет, а вместе с ним и особые препятствия.</p>
+        <h2>Пять биомов, Шахта и мега-биом Вулкан</h2>
+        <p class="muted">Каждые 400 очков мир плавно меняет цвет, а вместе с ним и особые препятствия. Иногда вместо обычного биома приходит Вулкан: он длится 800 очков.</p>
       </div>
       <div class="grid-bio" id="bioGrid"></div>
     </section>
@@ -282,6 +282,18 @@ footer { margin-top: 64px; padding-top: 24px; border-top: 3px solid var(--line);
         <div class="box">
           <h3>Код друга</h3>
           <p>У каждого игрока свой код. Когда друг вводит его в профиле, вы оба получаете по 5 кристаллов.</p>
+        </div>
+        <div class="box">
+          <h3>Сундуки</h3>
+          <p>Три вида: обычный, редкий и эпический. Внутри монеты, кристаллы и скины. Их можно купить, найти на трассе, получить после забега или в награде дня.</p>
+        </div>
+        <div class="box">
+          <h3>Награда дня</h3>
+          <p>Заходите каждый день: цепочка бесконечная, а награда случайная. Монеты, кристаллы, сундуки, скины, бесплатное улучшение или предмет.</p>
+        </div>
+        <div class="box">
+          <h3>Смена способностей и возрождение</h3>
+          <p>Два раза за забег можно сменить предложенные способности, третья смена покупается в улучшениях. После смерти можно возродиться за 175 монет и сохранить очки и способности.</p>
         </div>
         <div class="box">
           <h3>Уровень игрока</h3>
@@ -383,7 +395,9 @@ var ABIL = [
   ["Спасение", 1, 1, "1 секунда неуязвимости после каждого выбора способности"],
   ["Гигантизм", 2, 3, "Персонаж больше на 10%. 5% шанс раздавить препятствие"],
   ["Некромант", 2, 3, "Призывает 2 скелетов: каждый ломает следующее препятствие"],
-  ["Кристаллизм", 1, 3, "10 секунд: монеты с шансом 10% становятся кристаллами"]
+  ["Кристаллизм", 1, 3, "10 секунд: монеты с шансом 10% становятся кристаллами"],
+  ["Недовес", 0, 3, "Персонаж на 10% худее: проще проскочить"],
+  ["Электроток", 3, 5, "Мгновенно меняет биом и даёт 75 очков"]
 ];
 
 /* ---------- Пиксель-арт (те же рисунки, что в игре) ---------- */
@@ -403,6 +417,10 @@ var PAL = { W:"#ffffff", K:"#000000", R:"#e6331a", O:"#f27f1a", Y:"#ffd933", E:"
 var CACTUS = ["....GG....","...GGGG...","...GGGg...","G..GGGg...","G..GGGg.GG","GG.GGGg.GG","GGGGGGg.Gg",".gGGGGGGGg","...GGGGGg.","...GGGGg..","...GGGGg..","...GGGGg.."];
 var ROCK = ["...ssSSss...",".sSSSSSSSs..","sSSSsSSSSSs.","sSSSSSSSsSSs","SSsSSSSSSSSs","SSSSSSsSSSSs","SSSSSSSSSSss","sSSsSSSSSSSs","sSSSSSSsSSs.",".sSSSSSSSs..","..ssSSSsss..","....ssss...."];
 var GHOST = ["...WWWWWW...","..WWWWWWWW..",".WWWWWWWWWW.",".WWKKWWKKWW.",".WWKKWWKKWW.",".WWWWWWWWWW.",".WWWWKKWWWW.",".WWWWKKWWWW.",".WWWWWWWWWW.",".WWWWWWWWWW.",".WW.WWWW.WW.","..W..WW..W.."];
+var HEAD_KNIGHT = ["....RR......","..DDDDDDDD..",".DSSSSSSSSD.","DSSSSSSSSSSD","DSKKKKKKKKSD","DSSKWSSKWSSD","DSSSSSSSSSSD","DSSSDDDDSSSD","DBBBBBBBBBBD",".DBBBBBBBBD."];
+var HEAD_SMART = ["..DDDDDDDD..",".DBBBBBBBBD.","DBBBBBBBBBBD","DBKKKBBKKKBD","DKWWKBBKWWKD","DKWKKBBKWKKD","DBKKKBBKKKBD","DBBBDDDDBBBD","DBBBBBBBBBBD",".DBBBBBBBBD."];
+var EGG = ["....DDDD....","...DBBBBD...","..DBWWBBBD..",".DBBWBBBBBD.",".DBBBBBBBBD.","DBBBBBBBBBBD","DBBBBBBBBBBD","DBBBBBBBBBBD",".DBBBBBBBBD.",".DBBBBBBBBD.","..DDBBBBDD..","....DDDD...."];
+var CUBE = ["EEEEEEEEEE","EOOOORRROE","EOKOOOOKOE","EOOOYYOOOE","EOOOORRROE","EROORROOOE","ERRORYYROE","EORROYYOOE","EOOOORROOE","EEEEEEEEEE"];
 var ICICLE = ["IIIIIIII","IIIIIIiI",".IIIIIi.",".IIIIIi.","..IIIi..","..IIIi..","...IIi..","...IIi..","....Ii..","....I..."];
 var METEOR = ["........YY..",".......YOY..","...MMM.YOY..","..MMMMMOY...",".MMmMMMMM...",".MMMMMmMM...",".MMMmMMMM...","..MMMMMMM...","...MMMMM....","....MMM....."];
 
@@ -439,7 +457,10 @@ var SKINS = [
   ["Феникс", [.9,.2,.1], [.3,.12,.05], "2000 монет", 1, "ph"],
   ["Галакто", [.35,.2,.65], [1,.8,.25], "Бесплатно за подписку", 0],
   ["Магмовый", [.2,.1,.1], [.6,.12,.02], "20 кристаллов", 1, "magma"],
-  ["Чёрно-белый", [1,1,1], [.5,.5,.55], "50 кристаллов", 1, "bw"]
+  ["Чёрно-белый", [1,1,1], [.5,.5,.55], "50 кристаллов", 1, "bw"],
+  ["Рыцарский", [.3,.4,.85], [.12,.14,.3], "500 монет", 1, "knight"],
+  ["Умник", [.95,.85,.6], [.4,.28,.12], "125 монет", 0, "smart"],
+  ["Яйцо", [1,.95,.8], [.55,.4,.25], "Только из сундуков", 0, "egg"]
 ];
 
 function heroSprite(ctx, x, y, s, frame, skin) {
@@ -566,8 +587,10 @@ function heroSprite(ctx, x, y, s, frame, skin) {
     cv.width = 12; cv.height = 12;
     var ctx = cv.getContext("2d");
     var body = rgb(sk[1]), out = rgb(sk[2]);
-    var head = sk[5] === "magma" ? HEAD_MAGMA : sk[5] === "bw" ? HEAD_BW : HEAD;
-    if (sk[5] === "ph") {
+    var head = sk[5] === "magma" ? HEAD_MAGMA : sk[5] === "bw" ? HEAD_BW : sk[5] === "knight" ? HEAD_KNIGHT : sk[5] === "smart" ? HEAD_SMART : HEAD;
+    if (sk[5] === "egg") {
+      drawArt(ctx, EGG, 0, 0, body, out, 1);
+    } else if (sk[5] === "ph") {
       drawArt(ctx, PHOENIX, 0, 0, body, out, 1);
       drawArt(ctx, PH_FEET, 0, 10, body, out, 1);
     } else {
@@ -594,7 +617,8 @@ function heroSprite(ctx, x, y, s, frame, skin) {
     { n: "Ночь", sky: "#141a40", far: "#262d70", near: "#1a3350", grass: "#26594d", dirt: "#261f33", art: GHOST, s: 2, stars: true, d: "Призрак мигает: проходить можно, пока он полупрозрачный. Летучие мыши быстрее птиц." },
     { n: "Ледник", sky: "#bfe6ff", far: "#cceaff", near: "#a6d9f2", grass: "#e6f7ff", dirt: "#8cb3d9", art: ICICLE, s: 3, d: "Сосулька висит наверху, а потом падает прямо на трассу." },
     { n: "Космос", sky: "#080519", far: "#401a66", near: "#591f80", grass: "#8033cc", dirt: "#1f0f33", art: METEOR, s: 2, stars: true, d: "Метеорит летит по диагонали и целится туда, где вы окажетесь." },
-    { n: "Шахта", sky: "#1a141a", far: "#33262a", near: "#261f1f", grass: "#614d3d", dirt: "#33261f", mine: true, d: "Мини-биом. Прыгните в светящуюся фиолетовую яму: 14 секунд без очков, но с наградой в 35 монет и шансом на 4 кристалла." }
+    { n: "Вулкан (мега-биом)", sky: "#521212", far: "#73240f", near: "#471712", grass: "#382121", dirt: "#210f0d", art: CUBE, s: 3, d: "Длится 800 очков и приходит случайно. Магмовые шипы вырастают из земли, феникс летит волной, магма-кубы прыгают, а лавовые ямы светятся. Жёлтые ускорители на земле разгоняют героя." },
+    { n: "Шахта", sky: "#1a141a", far: "#33262a", near: "#261f1f", grass: "#614d3d", dirt: "#33261f", mine: true, d: "Мини-биом. Прыгните в светящуюся фиолетовую яму: 14 секунд без очков, но с наградой в 35 монет и шансом на 4 кристалла. Берегитесь аметистовых сосулек и портала: он выбросит вас наверх без награды." }
   ];
   var grid = document.getElementById("bioGrid");
   BIOMES.forEach(function (b) {
